@@ -1,18 +1,8 @@
 import gym
-
 import numpy as np
 
-
-class Params:
-    pass
-
-
-def epsilon_greedy(Q, epsilon, state):
-    greedy = np.random.uniform() > epsilon
-    if greedy:
-        return np.argmax(Q[state])
-    else:
-        return np.random.choice(np.arange(len(Q[0])))
+from math_utils import clipped_exp_decay, constant
+from tabular import train
 
 
 def main():
@@ -21,51 +11,48 @@ def main():
     state_size = env.observation_space.n
     action_size = env.action_space.n
 
-    alpha_decay = 1.0
-    epsilon_decay = 1.0
-    gamma = 0.99
+    alpha = constant(0.01)
 
-    params = Params()
-    params.epsilon = 0.1
-    params.alpha = 0.2
-    # Optimistic initialisation
-    params.Q = 1e3 * np.ones((state_size, action_size), np.float64)
+    epsilon_initial = 1.0
+    epsilon_min = 1e-5
+    epsilon_decay_rate = 0.2
+    epsilon = clipped_exp_decay(epsilon_initial, epsilon_min,
+                                epsilon_decay_rate)
 
-    def policy(state):
-        return epsilon_greedy(params.Q, params.epsilon, state)
+    gamma = 1.0
 
-    def episode(Q):
+    choices = np.arange(action_size)
+
+    def policy_probs(Q, eps, state):
+        probs = np.ones(action_size) * eps / action_size
+        probs[np.argmax(Q[state])] = 1 - eps + eps / action_size
+        return probs
+
+    def policy(Q, eps, state):
+        return np.random.choice(choices,
+                                p=policy_probs(Q, eps, state))
+
+    def sarsa_episode(i, Q):
         state = env.reset()
-        action = policy(state)
+        action = policy(Q, epsilon(i), state)
         done = False
         return_ = 0.0
         while not done:
             next_state, reward, done, info = env.step(action)
-            next_action = policy(next_state)
+            next_action = policy(Q, epsilon(i), next_state)
             td_err = (reward + gamma * Q[next_state, next_action]
                       - Q[state, action])
-            Q[state, action] += params.alpha * td_err
+            Q[state, action] += alpha(i) * td_err
             state = next_state
             action = next_action
             return_ += reward
 
-        return Q, return_
+        return return_, Q
 
-    N = 100
-    returns = [float('inf') for _ in range(N)]
-    for i in range(int(1e6)):
-        Q_new, return_ = episode(params.Q.copy())
-        returns = [return_, *returns[0:-1]]
-        diff = np.abs(Q_new - params.Q).mean()
-        params.Q = Q_new
-        params.alpha *= alpha_decay
-        params.epsilon *= epsilon_decay
-        if (i + 1) % N == 0:
-            score = sum(returns) / N
-            print(diff, score)
+    # Optimistic initialisation
+    Q_initial = 500 * np.ones((state_size, action_size), np.float64)
 
-            if 1.0 < score:
-                break
+    train(sarsa_episode, Q_initial)
 
 
 if __name__ == '__main__':
