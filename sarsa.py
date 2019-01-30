@@ -50,7 +50,7 @@ def main():
         return return_, Q
 
     # Optimistic initialisation
-    Q_initial = 500 * np.ones((state_size, action_size), np.float64)
+    Q_initial = 0.0 * np.ones((state_size, action_size), np.float64)
 
     train(sarsa_episode, Q_initial)
 
