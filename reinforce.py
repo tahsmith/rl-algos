@@ -1,6 +1,6 @@
 import gym.spaces
-import torch
 import numpy as np
+import torch
 
 device = torch.device('cpu')
 
@@ -60,7 +60,7 @@ def learn(episodes):
     mean = final_returns.mean()
     std = final_returns.std() + 1e-3
     loss = -sum((x * (y - mean) / std).sum() for x, y in zip(log_pi_list,
-                                                           returns))
+                                                             returns))
 
     loss.backward()
     opt.step()

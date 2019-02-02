@@ -12,6 +12,7 @@ def clipped_harmonic_sequence(x0, a, xmin):
     """
     Harmonic series of the form x0 / (a * i + 1)
     """
+
     def f(i):
         return max(
             x0 / (a * i + 1),

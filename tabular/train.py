@@ -1,6 +1,3 @@
-import numpy as np
-
-
 def train(env, episode_fn, stopping_fn, logging_fn, steps_per_log, Q):
     returns = []
     tracks = []
@@ -22,7 +19,6 @@ def train(env, episode_fn, stopping_fn, logging_fn, steps_per_log, Q):
         i += 1
 
         if i % steps_per_log == 0:
-            logging_fn(returns, i,  tracks)
-
+            logging_fn(returns, i, tracks)
 
     return returns, tracks

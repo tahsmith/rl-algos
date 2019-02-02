@@ -1,6 +1,6 @@
 import gym.spaces
-import torch
 import numpy as np
+import torch
 
 device = torch.device('cpu')
 

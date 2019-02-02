@@ -2,7 +2,6 @@ import numpy as np
 
 
 def sarsa_lambda(policy, gamma, alpha, lambda_):
-
     def episode_fn(state, step, i, Q):
         e = np.zeros_like(Q)
         action = policy(Q, i, state)

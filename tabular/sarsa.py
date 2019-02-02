@@ -1,5 +1,4 @@
 def sarsa(policy, gamma, alpha):
-
     def episode_fn(state, step, i, Q):
         action = policy(Q, i, state)
         done = False
