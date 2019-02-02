@@ -31,16 +31,34 @@ def clipped_exp_decay(x0, t, xmin):
     return f
 
 
-def epsilon_greedy(action_size, eps):
-    choices = np.arange(action_size)
+def epsilon_greedy_policy_probs(Q, eps, state):
+    action_size = len(Q[0])
+    probs = np.ones(action_size) * eps / action_size
+    probs[np.argmax(Q[state])] = 1 - eps + eps / action_size
+    return probs
 
-    def policy_probs(Q, eps, state):
-        probs = np.ones(action_size) * eps / action_size
-        probs[np.argmax(Q[state])] = 1 - eps + eps / action_size
-        return probs
 
+def epsilon_greedy(eps):
     def policy(Q, i, state):
-        return np.random.choice(choices,
-                                p=policy_probs(Q, eps(i), state))
+        return np.random.choice(
+            len(Q[state]),
+            p=epsilon_greedy_policy_probs(Q, eps(i), state)
+        )
+
+    return policy
+
+
+def softmax(x):
+    x -= np.max(x)
+    y = np.exp(x)
+    return y / np.sum(y)
+
+
+def softmax_policy(t):
+    def policy(Q, i, state):
+        return np.random.choice(
+            len(Q[state]),
+            p=softmax(Q[state] / t(i))
+        )
 
     return policy
