@@ -5,7 +5,7 @@ def sarsa(policy, gamma, alpha):
         while not done:
             next_state, reward, done, info = step(action)
             next_action = policy(Q, i, next_state)
-            td_err = (reward + gamma * Q[next_state, next_action]
+            td_err = (reward + gamma * Q[next_state, next_action] * (not done)
                       - Q[state, action])
             Q[state, action] += alpha(i) * td_err
             state = next_state
