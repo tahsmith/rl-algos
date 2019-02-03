@@ -1,3 +1,3 @@
 from .sarsa import sarsa
 from .sarsa_lambda import sarsa_lambda
-from .train import train
+from .train import train, train_with_plots
