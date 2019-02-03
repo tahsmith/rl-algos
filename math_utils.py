@@ -8,26 +8,20 @@ def constant(x):
     return f
 
 
-def clipped_harmonic_sequence(x0, a, xmin):
+def harmonic_sequence(x0, a, xmin):
     """
-    Harmonic series of the form x0 / (a * i + 1)
+    Harmonic series of the form (x0 - xmin) / (a * i + 1) + xmin
     """
 
     def f(i):
-        return max(
-            x0 / (a * i + 1),
-            xmin
-        )
+        return (x0 - xmin) / (a * i + 1) + xmin
 
     return f
 
 
-def clipped_exp_decay(x0, t, xmin):
+def exp_decay(x0, t, xmin):
     def f(i):
-        return max(
-            x0 * np.exp(-i * t),
-            xmin
-        )
+        return (x0 - xmin) * np.exp(-i * t) + xmin
 
     return f
 
@@ -63,3 +57,9 @@ def softmax_policy(t):
         )
 
     return policy
+
+
+def moving_avg(window, y):
+    avg_x = np.arange(y.shape[0] - window + 1) + window - 1
+    avg = np.convolve(y, np.ones(window) / window, mode='valid')
+    return avg_x, avg
