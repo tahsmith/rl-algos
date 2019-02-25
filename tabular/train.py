@@ -36,20 +36,20 @@ def train(env, episode_fn, stopping_fn, logging_fn, steps_per_log, *args):
 
 
 def train_with_plots(env, episode_fn, max_eps, steps_per_log, value_range,
-                     Q_initial):
+                     *args):
     import matplotlib.pyplot as plt
 
-    def stop(returns, i, Q):
+    def stop(returns, i, *args):
         return i == max_eps
 
-    def log(returns, i, Q):
+    def log(returns, i, *args):
         avg = sum(returns[-steps_per_log:]) / steps_per_log
         print(f'\r{i:5d}: {avg}', end='')
 
-    returns, q_track = train(env, episode_fn, stop, log, steps_per_log,
-                             Q_initial)
+    returns, tracks = train(env, episode_fn, stop, log, steps_per_log,
+                             *args)
     returns = np.array(returns)
-    q_track = np.array(q_track[0])
+    q_track = np.array(tracks[0])
 
     fig = plt.figure()
     plt.ylim(value_range)
