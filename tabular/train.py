@@ -35,10 +35,9 @@ def train(env, episode_fn, stopping_fn, logging_fn, steps_per_log, *args):
     return returns, tracks
 
 
-def train_with_plots(env, episode_fn, max_eps, steps_per_log, value_range,
+def train_with_plots(fig, env, episode_fn, max_eps, steps_per_log,
+                     value_range,
                      *args):
-    import matplotlib.pyplot as plt
-
     def stop(returns, i, *args):
         return i == max_eps
 
@@ -51,17 +50,18 @@ def train_with_plots(env, episode_fn, max_eps, steps_per_log, value_range,
     returns = np.array(returns)
     q_track = np.array(tracks[0])
 
-    fig = plt.figure()
-    plt.ylim(value_range)
-    plt.xlabel('episode no.')
-    plt.ylabel('return')
-    plt.plot(returns, 'b.', label='return')
+    axes = fig.subplots(1, 2)
+    axes[0].set_ylim(value_range)
+    axes[0].set_xlabel('episode no.')
+    axes[0].set_ylabel('return')
+    axes[0].plot(returns, 'b.', label='return')
+
     avg_x, avg = moving_avg(steps_per_log, returns)
-    plt.plot(avg_x, avg, 'r-', label=f'{steps_per_log}-long moving average')
-    plt.legend()
-    fig = plt.figure()
-    plt.plot(np.max(q_track, axis=2))
-    plt.xlabel('episode no.')
-    plt.ylabel('state value')
+    axes[0].plot(avg_x, avg, 'r-', label=f'{steps_per_log}-long moving average')
+    axes[0].legend()
+
+    axes[1].plot(np.max(q_track, axis=2))
+    axes[1].set_xlabel('episode no.')
+    axes[1].set_ylabel('state value')
 
     return returns, q_track
