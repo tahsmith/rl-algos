@@ -11,6 +11,10 @@ def planning(n, Q, R, T, alpha, gamma):
         p = T[state, action, :] / T[state, action, :].sum()
         next_state = np.random.choice(Q.shape[0], p=p)
         reward = R[state, action, next_state]
+        # If we never actually visited the next state, we don't have a
+        # reasonable estimate of the state-action value. This is OK if we
+        # initialised to zero, but not in any other case, so we skip it here
+        # with the `done` variable, as it is in all of the TD methods.
         done = np.all(T[next_state, :, :] == 0)
         td_err = (reward + gamma * Q[next_state, :].max() * (not done)
                   - Q[state, action])

@@ -27,8 +27,14 @@ This stateless approach has been useful in other ways:
 
 Currenly implemented:
 
- * sarsa, sarsa lambda
+ * sarsa, sarsa lambda, q-learning, dyna-q
  * a choice of epsilon-greedy or softmax exploration policies.
+ 
+*Terminal states*: The value of terminal states are never set to zero. They 
+will always sit at their initial values. This is a bit different to other 
+presentations of these algos, but it makes them a bit nicer when working with
+ OpenAI gym. Episodes of some of the games often end at non-terminal states, 
+ i.e., receiving "done" does not necessarily mean that the state was terminal.
 
 
 ## Policy gradient
