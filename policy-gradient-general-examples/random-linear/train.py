@@ -23,7 +23,7 @@ def loss_fn(estimate, true):
 
 class Normal:
     def __init__(self):
-        self.var = torch.tensor([10.0], requires_grad=True)
+        self.var = torch.tensor([1.0], requires_grad=True)
         self.mean = torch.tensor([0.0], requires_grad=True)
 
     def prob(self, x):
@@ -44,8 +44,8 @@ def train():
 
     model = torch.nn.Linear(1, 1)
 
-    m_true = 0.0
-    b_true = 10.0
+    m_true = -1.0
+    b_true = 1.0
 
     m_dist = Normal()
     b_dist = Normal()
