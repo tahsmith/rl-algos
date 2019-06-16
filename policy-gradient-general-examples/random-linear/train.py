@@ -21,20 +21,10 @@ def loss_fn(estimate, true):
     return torch.pow(estimate - true, 2)
 
 
-class Normal:
-    def __init__(self):
-        self.var = torch.tensor([1.0], requires_grad=True)
-        self.mean = torch.tensor([0.0], requires_grad=True)
-
-    def prob(self, x):
-        return torch.exp(self.log_prob(x))
-
-    def log_prob(self, x):
-        diff = (x - self.mean) / self.var
-        return diff * diff
-
-    def sample(self, shape):
-        return randn(shape, self.var.detach(), self.mean.detach())
+def normal(mean_initial, stddev_initial):
+    mean = torch.tensor([mean_initial], requires_grad=True)
+    stddev = torch.tensor([stddev_initial], requires_grad=True)
+    return [mean, stddev], torch.distributions.Normal(loc=mean, scale=stddev)
 
 
 def train():
@@ -47,12 +37,14 @@ def train():
     m_true = -1.0
     b_true = 1.0
 
-    m_dist = Normal()
-    b_dist = Normal()
+    m_vars, m_dist = normal(0.0, 1.0)
+    b_vars, b_dist = normal(0.0, 1.0)
 
-    params = [
-        m_dist.mean, m_dist.var, b_dist.mean, b_dist.var
+    dists = [
+        m_dist, b_dist
     ]
+
+    params = m_vars + b_vars
 
     opt = torch.optim.Adam(params=params, lr=learning_rate)
 
@@ -82,15 +74,22 @@ def train():
         losses = torch.tensor(losses)
         loss_mean = torch.std(losses)
         loss_std = torch.mean(losses)
-        policy_loss = - sum((x - loss_mean) * y / loss_std
-                            for x, y in zip(losses, policy_vals))
+        policy_loss = sum((loss - loss_mean) * p / loss_std
+                          for loss, p in zip(losses, policy_vals))
+
         policy_loss.backward()
 
         if ((i + 1) % 10) == 0:
-            print('loss', torch.mean(loss), 'policy', policy_loss)
+            test_x, test_y = sample_data(m_true, b_true, batch_size)
+            model.weight.data = m_dist.mean.data.reshape(1, 1)
+            model.bias.data = b_dist.mean.data
+
+            test_estimate = model(test_x)
+            loss = torch.mean(loss_fn(test_estimate, test_y))
+            print('loss', loss)
             print('grad', m_dist.mean.grad, b_dist.mean.grad)
             print('mean', m_dist.mean.data, b_dist.mean.data)
-            print('std', m_dist.var.data, b_dist.var.data)
+            print('std', m_dist.variance.data, b_dist.variance.data)
 
         opt.step()
 
