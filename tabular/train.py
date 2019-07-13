@@ -61,6 +61,7 @@ def train_with_plots(fig, env, episode_fn, max_eps, steps_per_log,
     axes[0].legend()
 
     axes[1].plot(np.max(q_track, axis=2))
+    axes[0].set_ylim(value_range)
     axes[1].set_xlabel('episode no.')
     axes[1].set_ylabel('state value')
 

@@ -1,3 +1,4 @@
+from .monte_carlo import monte_carlo
 from .sarsa import sarsa
 from .sarsa_lambda import sarsa_lambda
 from .dyna_q import dyna_q
