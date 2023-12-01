@@ -30,3 +30,15 @@ def test_monte_carlo_corridor():
         lambda a: ["l", "r"][a],
     )
     print(q)
+
+
+type GridCellType = Literal["s", "g", "h", "."]
+type GridAction = Literal["n", "s", "e", "w"]
+type GridState = tuple[int, int]
+@dataclass
+class GridWorld:
+    columns: int
+    rows: int
+    grid: list[list[GridCellType]]
+
+def grid
