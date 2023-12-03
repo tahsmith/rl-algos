@@ -27,7 +27,7 @@ def monte_carlo(policy, alpha):
 
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Optional
 from random import Random
 import numpy as np
 from functools import partial
@@ -78,16 +78,21 @@ def episode_fn[State, Action](
     initial_state: State,
     step_fn: StepFn[State, Action],
     action_fn: ActionFn[State, Action],
+    max_steps: Optional[int] = None,
 ) -> History[Action, State]:
     state = initial_state
     done = False
     history: History[Action, State] = []
+    i = 0
     while not done:
+        if max_steps and i > max_steps:
+            break
         action = action_fn(random, state)
         step = step_fn(random, state, action)
         history.append((action, step))
         done = step.done
         state = step.state
+        i += 1
     return history
 
 
@@ -125,18 +130,23 @@ def monte_carlo_2[State, Action](
     n_actions: int,
     encoder: StateEncoder[State],
     decoder: ActionDecoder[Action],
-):
+) -> tuple[Array, Callable[[Array, Random, State], Action]]:
     q: Array = np.zeros((n_states, n_actions))
     encoded_step_fn = partial(tabular_step_fn, step_fn, encoder)
     encoded_initial_state = (initial_state, encoder(initial_state))
     for i in range(trials):
-        eps = 1 / (i + 1)
+        eps = 1 / (i * 0.01 + 1)
         policy = partial(tabular_epsilon_greedy, eps, decoder, q)
         history = episode_fn(random, encoded_initial_state, encoded_step_fn, policy)
-        alpha = 1 / (i + 1)
+        alpha = 1 / (i * 0.01 + 1)
         q = monte_carlo_update(alpha, q, encoded_initial_state, history)
 
-    return q
+    return (
+        q,
+        lambda q, random, state: tabular_epsilon_greedy(
+            0.0, decoder, q, random, (state, encoder(state))
+        )[0],
+    )
 
 
 def monte_carlo_update[State, Action](
