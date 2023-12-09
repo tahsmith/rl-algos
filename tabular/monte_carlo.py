@@ -6,26 +6,6 @@ estimate the expectation value.
 """
 
 
-def monte_carlo(policy, alpha):
-    def episode(state, step, i, Q):
-        done = False
-        experiences = []
-        while not done:
-            action = policy(Q, i, state)
-            next_state, reward, done, info = step(action)
-            experiences.append((state, action, reward, next_state, done))
-            state = next_state
-
-        states, actions, rewards, _, __ = zip(*experiences)
-
-        for j, state in enumerate(states):
-            old_Q = Q[state][actions[j]]
-            Q[state][actions[j]] = old_Q + alpha(i) * (sum(rewards[j:]) - old_Q)
-        return Q
-
-    return episode
-
-
 from dataclasses import dataclass
 from typing import Callable, Optional
 from random import Random
@@ -35,10 +15,17 @@ from numpy.typing import NDArray
 
 
 @dataclass
-class Step[TState]:
-    state: TState
+class Step[State]:
     reward: float
-    done: bool
+    next_state: Optional[State]
+
+
+@dataclass
+class Experience[State, Action]:
+    state: State
+    action: Action
+    reward: float
+    next_state: Optional[State]
 
 
 type StepFn[TState, TAction] = Callable[[Random, TState, TAction], Step[TState]]
@@ -61,16 +48,11 @@ def epsilon_greedy_policy_probs(Q: Array, eps: float, state: int):
     return probs
 
 
-def epsilon_greedy(eps: LearningSchedule) -> Callable[[Array, int, int], int]:
-    def policy(Q: Array, i: int, state: int):
-        return np.random.choice(
-            len(Q[state]), p=epsilon_greedy_policy_probs(Q, eps(i), state)
-        )
-
-    return policy
+def epsilon_greedy(random: Random, eps: float, Q: Array, state: int) -> EncodedAction:
+    return np.random.choice(len(Q[state]), p=epsilon_greedy_policy_probs(Q, eps, state))
 
 
-type History[Action, State] = list[tuple[Action, Step[State]]]
+type History[Action, State] = list[Experience[State, Action]]
 
 
 def episode_fn[State, Action](
@@ -81,19 +63,24 @@ def episode_fn[State, Action](
     max_steps: Optional[int] = None,
 ) -> History[Action, State]:
     state = initial_state
-    done = False
     history: History[Action, State] = []
     i = 0
-    while not done:
+    while state is not None:
         if max_steps and i > max_steps:
             break
         action = action_fn(random, state)
         step = step_fn(random, state, action)
-        history.append((action, step))
-        done = step.done
-        state = step.state
+        experience = Experience(
+            state=state, action=action, reward=step.reward, next_state=step.next_state
+        )
+        history.append(experience)
+        state = step.next_state
         i += 1
     return history
+
+
+type AugmentedState[State] = tuple[State, EncodedState]
+type AugmentedAction[Action] = tuple[Action, EncodedAction]
 
 
 def tabular_epsilon_greedy[State, Action](
@@ -101,10 +88,9 @@ def tabular_epsilon_greedy[State, Action](
     decoder: ActionDecoder[Action],
     q: Array,
     random: Random,
-    state: tuple[State, EncodedState],
-) -> tuple[Action, EncodedAction]:
-    i = 0
-    encoded_action = epsilon_greedy(lambda _: eps)(q, i, state[1])
+    state: AugmentedState[State],
+) -> AugmentedAction[Action]:
+    encoded_action = epsilon_greedy(random, eps, q, state[1])
     return (decoder(encoded_action), encoded_action)
 
 
@@ -112,12 +98,15 @@ def tabular_step_fn[State, Action](
     step_fn: StepFn[State, Action],
     encode: StateEncoder[State],
     random: Random,
-    state: tuple[State, EncodedState],
-    action: tuple[Action, EncodedAction],
-) -> Step[tuple[State, EncodedState]]:
+    state: AugmentedState[State],
+    action: AugmentedAction[Action],
+) -> Step[AugmentedState[State]]:
     step = step_fn(random, state[0], action[0])
     return Step(
-        state=(step.state, encode(step.state)), reward=step.reward, done=step.done
+        reward=step.reward,
+        next_state=(step.next_state, encode(step.next_state))
+        if step.next_state is not None
+        else None,
     )
 
 
@@ -139,7 +128,7 @@ def monte_carlo_2[State, Action](
         policy = partial(tabular_epsilon_greedy, eps, decoder, q)
         history = episode_fn(random, encoded_initial_state, encoded_step_fn, policy)
         alpha = 1 / (i * 0.01 + 1)
-        q = monte_carlo_update(alpha, q, encoded_initial_state, history)
+        q = monte_carlo_update(alpha, q, history)
 
     return (
         q,
@@ -152,13 +141,12 @@ def monte_carlo_2[State, Action](
 def monte_carlo_update[State, Action](
     alpha: float,
     q: Array,
-    initial_state: tuple[State, EncodedState],
     history: History[tuple[Action, EncodedAction], tuple[State, EncodedState]],
 ) -> Array:
     q = q.copy()
-    states = [initial_state[1], *(x[1].state[1] for x in history[:-1])]
-    actions = [x[0][1] for x in history]
-    rewards = [x[1].reward for x in history]
+    states = [x.state[1] for x in history]
+    actions = [x.action[1] for x in history]
+    rewards = [x.reward for x in history]
     future_rewards = np.cumsum(rewards[::-1])[::-1]
     for state, action, future_reward in zip(states, actions, future_rewards):
         q[state, action] += alpha * (future_reward - q[state, action])

@@ -17,9 +17,9 @@ def corridor_step_fn(
 ) -> Step[CorridorState]:
     if state == "s":
         if action == "l":
-            return Step(state="h", reward=0, done=True)
+            return Step(reward=0, next_state=None)
         if action == "r":
-            return Step(state="g", reward=1, done=True)
+            return Step(reward=1, next_state=None)
     else:
         raise ValueError()
 
@@ -70,16 +70,16 @@ def grid_world(
         or (state[1] > world.columns - 1)
         or (state[1] < 0)
     ):
-        return Step(state=state, reward=0, done=True)
+        return Step(reward=0, next_state=None)
 
     cell_type = world.grid[state[0]][state[1]]
 
     if cell_type == ".":
-        return Step(state=state, reward=0, done=False)
+        return Step(reward=0, next_state=state)
     elif cell_type == "h":
-        return Step(state=state, reward=0, done=True)
+        return Step(reward=0, next_state=None)
     elif cell_type == "g":
-        return Step(state=state, reward=1, done=True)
+        return Step(reward=1, next_state=None)
     else:
         raise ValueError()
 
@@ -121,8 +121,8 @@ def test_grid_world(data: DataStrategy):
     )
     history = episode_fn(Random(), (0, 0), step_fn, partial(policy, q), 100)
 
-    return_ = sum(x[1].reward for x in history)
-    return_star = sum(x[1].reward for x in history_star)
+    return_ = sum(x.reward for x in history)
+    return_star = sum(x.reward for x in history_star)
 
     note(str(q_star))
     note(str(history_star))
