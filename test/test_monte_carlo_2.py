@@ -3,13 +3,19 @@ from random import Random
 from typing import Literal, TypeAlias, get_args
 
 from hypothesis.strategies._internal.core import DataStrategy
-from tabular.monte_carlo import episode_fn, monte_carlo_2, Step
+from tabular.monte_carlo import (
+    Environment,
+    TabularEncoding,
+    episode_fn,
+    monte_carlo_2,
+    Step,
+)
 from dataclasses import dataclass
 from hypothesis import given, note, strategies as st
 import numpy as np
 
-type CorridorState = Literal["h", "s", "g"]
-type CorridorAction = Literal["l", "r"]
+CorridorState: TypeAlias = Literal["h", "s", "g"]
+CorridorAction: TypeAlias = Literal["l", "r"]
 
 
 def corridor_step_fn(
@@ -24,17 +30,24 @@ def corridor_step_fn(
         raise ValueError()
 
 
+corridor_environment = Environment(
+    step_fn=corridor_step_fn, initial_state=lambda _: "s"
+)
+
+
+def encodeState(state: CorridorState) -> int:
+    return get_args(CorridorState).index(state)
+
+
+def decodeAction(action: int) -> CorridorAction:
+    return get_args(CorridorAction)[action]
+
+
+encoding = TabularEncoding(3, 2, encodeState, decodeAction)
+
+
 def test_monte_carlo_corridor():
-    q = monte_carlo_2(
-        Random(),
-        "s",
-        100,
-        corridor_step_fn,
-        3,
-        2,
-        lambda s: ["h", "s", "g"].index(s),
-        lambda a: ["l", "r"][a],
-    )
+    q = monte_carlo_2(corridor_environment, Random(), 100, encoding)
     print(q)
 
 
@@ -50,7 +63,7 @@ class GridWorld:
     grid: list[list[GridCellType]]
 
 
-def grid_world(
+def grid_world_step_fn(
     world: GridWorld, random: Random, state: GridState, action: GridAction
 ) -> Step[GridState]:
     if action == "n":
@@ -83,22 +96,30 @@ def grid_world(
     else:
         raise ValueError()
 
+def make_grid_world(world: GridWorld) -> Environment[GridState, GridAction]:
+    return Environment(
+        lambda _: (0,0),
+        partial(grid_world_step_fn, world),
+    )
+
 
 @given(st.data())
 def test_grid_world(data: DataStrategy):
     world = GridWorld(rows=2, columns=2, grid=[[".", "h"], [".", "g"]])
+    environmnet = make_grid_world(world)
 
-    step_fn = partial(grid_world, world)
-
-    q_star, policy = monte_carlo_2(
-        Random(),
-        (0, 0),
-        100,
-        step_fn,
+    encoding = TabularEncoding[GridState, GridAction](
         4,
         4,
         lambda state: state[0] * 2 + state[1],
-        lambda action: get_args(GridAction)[action],
+        lambda action: get_args(GridAction)[action]
+    )
+
+    q_star, policy = monte_carlo_2(
+        environmnet,
+        Random(),
+        100,
+        encoding
     )
 
     q = data.draw(
@@ -114,12 +135,11 @@ def test_grid_world(data: DataStrategy):
 
     history_star = episode_fn(
         Random(),
-        (0, 0),
-        step_fn,
+        environmnet,
         partial(policy, q_star),
         100,
     )
-    history = episode_fn(Random(), (0, 0), step_fn, partial(policy, q), 100)
+    history = episode_fn(Random(), environmnet, partial(policy, q), 100)
 
     return_ = sum(x.reward for x in history)
     return_star = sum(x.reward for x in history_star)
@@ -130,3 +150,4 @@ def test_grid_world(data: DataStrategy):
     note(str(history))
 
     assert return_star >= return_
+
