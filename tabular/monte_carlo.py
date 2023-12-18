@@ -7,30 +7,13 @@ estimate the expectation value.
 
 
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable
 from random import Random
 import numpy as np
 from functools import partial
 from numpy.typing import NDArray
 
-
-@dataclass
-class Step[State]:
-    reward: float
-    next_state: Optional[State]
-
-
-@dataclass
-class Experience[State, Action]:
-    state: State
-    action: Action
-    reward: float
-    next_state: Optional[State]
-
-
-type StepFn[TState, TAction] = Callable[[Random, TState, TAction], Step[TState]]
-type Policy[TState, TAction] = Callable[[Random, TState], TAction]
-
+from environments.types import Step, StepFn, History, Environment, episode_fn
 
 type TabularState = int
 type TabularAction = int
@@ -40,38 +23,6 @@ type ActionDecoder[TAction] = Callable[[TabularAction], TAction]
 
 type LearningState[TState, TArray] = tuple[TState, TArray, int]
 type LearningSchedule = Callable[[int], float]
-
-type History[Action, State] = list[Experience[State, Action]]
-
-
-@dataclass
-class Environment[State, Action]:
-    initial_state: Callable[[Random], State]
-    step_fn: StepFn[State, Action]
-
-
-def episode_fn[State, Action](
-    random: Random,
-    environment: Environment[State, Action],
-    policy: Policy[State, Action],
-    max_steps: Optional[int] = None,
-) -> History[Action, State]:
-    state = environment.initial_state(random)
-    step_fn = environment.step_fn
-    history: History[Action, State] = []
-    i = 0
-    while state is not None:
-        if max_steps and i > max_steps:
-            break
-        action = policy(random, state)
-        step = step_fn(random, state, action)
-        experience = Experience(
-            state=state, action=action, reward=step.reward, next_state=step.next_state
-        )
-        history.append(experience)
-        state = step.next_state
-        i += 1
-    return history
 
 
 def epsilon_greedy_policy_probs(Q: Array, eps: float, state: int):
