@@ -11,18 +11,9 @@ from typing import Callable
 from random import Random
 import numpy as np
 from functools import partial
-from numpy.typing import NDArray
 
 from environments.types import Step, StepFn, History, Environment, episode_fn
-
-type TabularState = int
-type TabularAction = int
-type Array = NDArray[np.float64]
-type StateEncoder[TState] = Callable[[TState], TabularState]
-type ActionDecoder[TAction] = Callable[[TabularAction], TAction]
-
-type LearningState[TState, TArray] = tuple[TState, TArray, int]
-type LearningSchedule = Callable[[int], float]
+from .types import TabularAction, TabularState, Array, ActionDecoder, StateEncoder
 
 
 def epsilon_greedy_policy_probs(Q: Array, eps: float, state: int):
