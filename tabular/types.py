@@ -10,3 +10,7 @@ type ActionDecoder[TAction] = Callable[[TabularAction], TAction]
 
 type LearningState[TState, TArray] = tuple[TState, TArray, int]
 type LearningSchedule = Callable[[int], float]
+
+type EncodedState[State] = tuple[State, TabularState]
+type EncodedAction[Action] = tuple[Action, TabularAction]
+
