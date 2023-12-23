@@ -94,3 +94,43 @@ def decode_bucketed_range(
     min_value: float, max_value: float, n_levels: int, value: int
 ) -> float:
     return value / (n_levels - 1) * (max_value - min_value) + min_value
+
+
+type Encoder[T] = Callable[[T], int]
+
+
+def joint_encode[T1, T2](
+    encoder1: Encoder[T1],
+    encoder2: Encoder[T2],
+    n_states2: int,
+    value: tuple[T1, T2],
+) -> int:
+    x1, x2 = value
+    encoded1 = encoder1(x1)
+    encoded2 = encoder2(x2)
+
+    return encoded1 + encoded2 * n_states2
+
+
+def append_encoding[*Ts, T](
+    encoder1: Encoder[tuple[*Ts]],
+    encoder: Encoder[T],
+    n_states: int,
+    value: tuple[*Ts, T],
+) -> int:
+    *xs, x = value
+    reveal_type(value[:-1])
+    tup: tuple[*Ts] = tuple(xs)
+    return joint_encode(encoder1, encoder, n_states, (tup, x))
+
+
+type Decoder[T] = Callable[[int], T]
+
+
+def joint_decode[T1, T2](
+    decoder1: Decoder[T1], decoder2: Decoder[T2], n_states2: int, value: int
+) -> tuple[T1, T2]:
+    encoded1 = value % n_states2
+    encoded2 = value // n_states2
+
+    return (decoder1(encoded1), decoder2(encoded2))
