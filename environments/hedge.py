@@ -31,9 +31,9 @@ def step_fn(rng: Random, state: State, action: Action) -> Step[State]:
         hedge_pos=action.order + state.hedge_pos,
     )
 
-    done = next_state.tte == 0
+    done = next_state.tte == 1
     step = Step(
-        next_state=next_state if done else None,
+        next_state=next_state if not done else None,
         reward=-action.order + expiry_value,
     )
 
