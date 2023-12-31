@@ -1,4 +1,4 @@
-from hypothesis import strategies as st, given
+from hypothesis import assume, strategies as st, given
 
 from tabular.encoding import (
     encode_bucketed_range,
@@ -37,3 +37,15 @@ def test_joint_encoding():
     decoded = joint_decoder(99)
 
     assert decoded == (9, 9)
+
+
+normal_floats = st.floats(allow_nan=False, allow_infinity=False, allow_subnormal=False, min_value=-1000, max_value=1000)
+
+
+@given(normal_floats, normal_floats, st.integers(min_value=2, max_value=10), normal_floats)
+def test_output(min_value: float, max_value: float, n_levels: int, value: float):
+    assume(max_value - min_value > 0.0)
+    if min_value > max_value:
+        min_value, max_value = max_value, min_value
+    encoded = encode_bucketed_range(min_value, max_value, n_levels, value)
+    assert encoded in range(n_levels)

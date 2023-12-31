@@ -87,8 +87,12 @@ def encode_environment[State, Action](
 def encode_bucketed_range(
     min_value: float, max_value: float, n_levels: int, value: float
 ) -> int:
-    return int((value - min_value) / (max_value - min_value) * (n_levels - 1))
-
+    value = (value - min_value) / (max_value - min_value) * (n_levels - 1)
+    if value >= n_levels:
+        return n_levels - 1
+    if value < 0:
+        return 0
+    return int(value)
 
 def decode_bucketed_range(
     min_value: float, max_value: float, n_levels: int, value: int

@@ -22,7 +22,7 @@ bucket_hedge = encoding.TabularEncoding(
 )
 
 q, policy = monte_carlo.monte_carlo_2(
-    hedge_environment, random.Random(), 100000, bucket_hedge
+    hedge_environment, random.Random(), 10000, bucket_hedge
 )
 
 rnd = random.Random()

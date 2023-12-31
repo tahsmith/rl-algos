@@ -19,10 +19,6 @@ class Action:
 
 
 def step_fn(rng: Random, state: State, action: Action) -> Step[State]:
-    if state.tte == 1:
-        expiry_value = max(0, state.base_price - state.strike)
-    else:
-        expiry_value = 0
     next_state = replace(
         state,
         tte=state.tte - 1,
@@ -31,10 +27,19 @@ def step_fn(rng: Random, state: State, action: Action) -> Step[State]:
         hedge_pos=action.order + state.hedge_pos,
     )
 
-    done = next_state.tte == 1
+    if state.tte == 1:
+        expiry_value = (
+            max(0, next_state.base_price - state.strike) * 100
+            + next_state.hedge_pos * next_state.base_price
+        )
+    else:
+        expiry_value = 0
+
+    done = next_state.tte == 0
+
     step = Step(
         next_state=next_state if not done else None,
-        reward=-action.order + expiry_value,
+        reward=-action.order * state.base_price + expiry_value,
     )
 
     return step
