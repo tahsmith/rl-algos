@@ -3,12 +3,12 @@ from random import Random
 from typing import Literal, TypeAlias, get_args
 
 from hypothesis.strategies._internal.core import DataStrategy
+from environments.types import Step
 from tabular.monte_carlo import (
     Environment,
     TabularEncoding,
     episode_fn,
     monte_carlo_2,
-    Step,
 )
 from dataclasses import dataclass
 from hypothesis import given, note, strategies as st
@@ -115,10 +115,10 @@ def test_grid_world(data: DataStrategy):
         lambda action: get_args(GridAction)[action]
     )
 
-    q_star, policy = monte_carlo_2(
+    result = monte_carlo_2(
         environmnet,
         Random(),
-        100,
+        1000,
         encoding
     )
 
@@ -136,15 +136,15 @@ def test_grid_world(data: DataStrategy):
     history_star = episode_fn(
         Random(),
         environmnet,
-        partial(policy, q_star),
+        result.policy,
         100,
     )
-    history = episode_fn(Random(), environmnet, partial(policy, q), 100)
+    history = episode_fn(Random(), environmnet, partial(result.parametric_policy, q), 100)
 
     return_ = sum(x.reward for x in history)
     return_star = sum(x.reward for x in history_star)
 
-    note(str(q_star))
+    note(str(result.params))
     note(str(history_star))
     note(str(q))
     note(str(history))

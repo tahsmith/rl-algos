@@ -47,7 +47,7 @@ def step_fn(rng: Random, state: State, action: Action) -> Step[State]:
 
 hedge_environment = Environment(
     initial_state=lambda _: State(
-        strike=100, tte=100, base_price=100, hedge_pos=0, volatility=1.0
+        strike=100, tte=100, base_price=100, hedge_pos=0, volatility=0.01
     ),
     step_fn=step_fn,
 )
