@@ -1,16 +1,19 @@
 import numpy as np
-from typing import Callable
+from typing import Callable, TypeVar
 from numpy.typing import NDArray
 
-type TabularState = int
-type TabularAction = int
-type Array = NDArray[np.float64]
-type StateEncoder[TState] = Callable[[TState], TabularState]
-type ActionDecoder[TAction] = Callable[[TabularAction], TAction]
+TState = TypeVar("TState")
+TAction = TypeVar("TAction")
+TArray = TypeVar("TArray")
 
-type LearningState[TState, TArray] = tuple[TState, TArray, int]
-type LearningSchedule = Callable[[int], float]
+TabularState = int
+TabularAction = int
+Array = NDArray[np.float64]
+StateEncoder = Callable[[TState], TabularState]
+ActionDecoder = Callable[[TabularAction], TAction]
 
-type EncodedState[State] = tuple[State, TabularState]
-type EncodedAction[Action] = tuple[Action, TabularAction]
+LearningState = tuple[TState, TArray, int]
+LearningSchedule = Callable[[int], float]
 
+EncodedState = tuple[TState, TabularState]
+EncodedAction = tuple[TAction, TabularAction]

@@ -2,9 +2,9 @@ import gym.spaces
 import numpy as np
 import torch
 
-device = torch.device('cpu')
+device = torch.device("cpu")
 
-env = gym.make('CartPole-v0')
+env = gym.make("CartPole-v0")
 
 assert isinstance(env.action_space, gym.spaces.Discrete)
 action_size = env.action_space.n
@@ -44,9 +44,7 @@ def learn(episodes):
     all_actions = []
     for episode in episodes:
         states, actions, rewards, next_states, dones = zip(*episode)
-        rewards = [reward * (discount ** i)
-                   for i, reward
-                   in enumerate(rewards)]
+        rewards = [reward * (discount**i) for i, reward in enumerate(rewards)]
         states = torch.tensor(states, device=device, dtype=torch.float)
         rewards = torch.tensor(rewards, device=device, dtype=torch.float)
         actions = torch.tensor(actions, device=device, dtype=torch.long)
@@ -61,21 +59,23 @@ def learn(episodes):
     std = final_returns.std() + 1e-3
     normalised_returns = [(return_ - mean) / std for return_ in all_returns]
 
-    old_pis = [pi(states).gather(1, actions.reshape(-1, 1)).detach()
-               for states, actions
-               in zip(all_states, all_actions)]
+    old_pis = [
+        pi(states).gather(1, actions.reshape(-1, 1)).detach()
+        for states, actions in zip(all_states, all_actions)
+    ]
     for i in range(4):
         opt.zero_grad()
 
-        pis = [pi(states).gather(1, actions.reshape(-1, 1))
-               for states, actions
-               in zip(all_states, all_actions)]
+        pis = [
+            pi(states).gather(1, actions.reshape(-1, 1))
+            for states, actions in zip(all_states, all_actions)
+        ]
 
         ratios = [x / y for x, y in zip(pis, old_pis)]
-        clipped_ratios = [torch.min(r, torch.clamp(r, 1 - eps, 1 + eps))
-                          for r in ratios]
-        loss = -sum((x * y).sum()
-                    for x, y in zip(clipped_ratios, normalised_returns))
+        clipped_ratios = [
+            torch.min(r, torch.clamp(r, 1 - eps, 1 + eps)) for r in ratios
+        ]
+        loss = -sum((x * y).sum() for x, y in zip(clipped_ratios, normalised_returns))
         loss /= len(normalised_returns)
         loss.backward()
         opt.step()
@@ -89,7 +89,7 @@ def episode(env: gym.Env):
     state = env.reset()
     done = False
     experiences = []
-    reward_total = 0.
+    reward_total = 0.0
     while not done:
         action = policy(state)
         next_state, reward, done, info = env.step(action)
@@ -101,17 +101,20 @@ def episode(env: gym.Env):
 
 
 def train():
-    running_rewards = [float('-inf') for _ in range(100)]
+    running_rewards = [float("-inf") for _ in range(100)]
     episodes = []
     i = 0
     while True:
         reward, experiences = episode(env)
         episodes.append(experiences)
         running_rewards = running_rewards[1:] + [reward]
-        print(f'\r{i + 1:06d} {reward:6.1f}', end='')
+        print(f"\r{i + 1:06d} {reward:6.1f}", end="")
         if ((i + 1) % 100) == 0:
-            print('\r{i:06d} {reward:6.1f}'.format(i=i + 1, reward=sum(
-                running_rewards) / 100))
+            print(
+                "\r{i:06d} {reward:6.1f}".format(
+                    i=i + 1, reward=sum(running_rewards) / 100
+                )
+            )
 
         if ((i + 1) % 4) == 0:
             learn(episodes)

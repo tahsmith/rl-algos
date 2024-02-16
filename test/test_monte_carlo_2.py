@@ -96,9 +96,10 @@ def grid_world_step_fn(
     else:
         raise ValueError()
 
+
 def make_grid_world(world: GridWorld) -> Environment[GridState, GridAction]:
     return Environment(
-        lambda _: (0,0),
+        lambda _: (0, 0),
         partial(grid_world_step_fn, world),
     )
 
@@ -112,15 +113,10 @@ def test_grid_world(data: DataStrategy):
         4,
         4,
         lambda state: state[0] * 2 + state[1],
-        lambda action: get_args(GridAction)[action]
+        lambda action: get_args(GridAction)[action],
     )
 
-    result = monte_carlo_2(
-        environmnet,
-        Random(),
-        1000,
-        encoding
-    )
+    result = monte_carlo_2(environmnet, Random(), 1000, encoding)
 
     q = data.draw(
         st.lists(
@@ -139,7 +135,9 @@ def test_grid_world(data: DataStrategy):
         result.policy,
         100,
     )
-    history = episode_fn(Random(), environmnet, partial(result.parametric_policy, q), 100)
+    history = episode_fn(
+        Random(), environmnet, partial(result.parametric_policy, q), 100
+    )
 
     return_ = sum(x.reward for x in history)
     return_star = sum(x.reward for x in history_star)
@@ -150,4 +148,3 @@ def test_grid_world(data: DataStrategy):
     note(str(history))
 
     assert return_star >= return_
-

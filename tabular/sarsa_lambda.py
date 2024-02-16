@@ -9,8 +9,11 @@ def sarsa_lambda(policy, gamma, alpha, lambda_):
         while not done:
             next_state, reward, done, info = step(action)
             next_action = policy(Q, i, next_state)
-            td_err = (reward + gamma * Q[next_state, next_action] * (not done)
-                      - Q[state, action])
+            td_err = (
+                reward
+                + gamma * Q[next_state, next_action] * (not done)
+                - Q[state, action]
+            )
             e[state, action] += 1.0
             Q += e * alpha(i) * td_err
             e *= lambda_ * gamma

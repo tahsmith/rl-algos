@@ -16,8 +16,7 @@ def planning(n, Q, R, T, alpha, gamma):
         # initialised to zero, but not in any other case, so we skip it here
         # with the `done` variable, as it is in all of the TD methods.
         done = np.all(T[next_state, :, :] == 0)
-        td_err = (reward + gamma * Q[next_state, :].max() * (not done)
-                  - Q[state, action])
+        td_err = reward + gamma * Q[next_state, :].max() * (not done) - Q[state, action]
         Q[state, action] += alpha * td_err
 
     return Q
@@ -32,8 +31,9 @@ def dyna_q(policy, gamma, alpha, n_planning):
             T[state, action, next_state] += 1
             r_err = reward - R[state, action, next_state]
             R[state, action, next_state] += r_err / T[state, action, next_state]
-            td_err = (reward + gamma * Q[next_state, :].max() * (not done)
-                      - Q[state, action])
+            td_err = (
+                reward + gamma * Q[next_state, :].max() * (not done) - Q[state, action]
+            )
             Q[state, action] += alpha(i) * td_err
             state = next_state
 

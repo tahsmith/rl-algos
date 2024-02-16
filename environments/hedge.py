@@ -23,7 +23,7 @@ def step_fn(rng: Random, state: State, action: Action) -> Step[State]:
         state,
         tte=state.tte - 1,
         base_price=state.base_price
-        * math.exp(rng.normalvariate(sigma=state.volatility)),
+        * math.exp(rng.normalvariate(sigma=state.volatility, mu=1)),
         hedge_pos=action.order + state.hedge_pos,
     )
 
@@ -46,8 +46,8 @@ def step_fn(rng: Random, state: State, action: Action) -> Step[State]:
 
 
 hedge_environment = Environment(
-    initial_state=lambda _: State(
-        strike=100, tte=100, base_price=100, hedge_pos=0, volatility=0.01
+    initial_state=lambda rng: State(
+        strike=100, tte=1, base_price=rng.uniform(90, 120), hedge_pos=0, volatility=0.1
     ),
     step_fn=step_fn,
 )

@@ -1,3 +1,4 @@
+from typing_extensions import TypeVarTuple
 from .types import (
     EncodedAction,
     EncodedState,
@@ -11,7 +12,8 @@ from random import Random
 from environments.types import StepFn, Environment, Step
 from dataclasses import dataclass
 import numpy as np
-from typing import Callable
+from typing import Callable, TypeVar, Generic
+from typing_extensions import Unpack
 
 
 def epsilon_greedy_policy_probs(Q: Array, eps: float, state: int):
@@ -25,7 +27,11 @@ def epsilon_greedy(random: Random, eps: float, Q: Array, state: int) -> TabularA
     return np.random.choice(len(Q[state]), p=epsilon_greedy_policy_probs(Q, eps, state))
 
 
-def tabular_epsilon_greedy[State, Action](
+State = TypeVar("State")
+Action = TypeVar("Action")
+
+
+def tabular_epsilon_greedy(
     eps: float,
     decoder: ActionDecoder[Action],
     q: Array,
@@ -36,7 +42,7 @@ def tabular_epsilon_greedy[State, Action](
     return (decoder(encoded_action), encoded_action)
 
 
-def tabular_step_fn[State, Action](
+def tabular_step_fn(
     step_fn: StepFn[State, Action],
     encode: StateEncoder[State],
     random: Random,
@@ -53,21 +59,21 @@ def tabular_step_fn[State, Action](
 
 
 @dataclass
-class TabularEncoding[State, Action]:
+class TabularEncoding(Generic[State, Action]):
     n_states: int
     n_actions: int
     encoder: StateEncoder[State]
     decoder: ActionDecoder[Action]
 
 
-type TabularPolicy[State, Action] = Callable[[Array, Random, State], Action]
-type TabularLearner[State, Action] = Callable[
+TabularPolicy = Callable[[Array, Random, State], Action]
+TabularLearner = Callable[
     [Environment[State, Action], TabularEncoding[State, Action]],
     tuple[Array, TabularPolicy[State, Action]],
 ]
 
 
-def encode_environment[State, Action](
+def encode_environment(
     environment: Environment[State, Action], encoding: TabularEncoding[State, Action]
 ) -> Environment[EncodedState[State], EncodedAction[Action]]:
     return Environment[EncodedState[State], EncodedAction[Action]](
@@ -94,16 +100,22 @@ def encode_bucketed_range(
         return 0
     return int(value)
 
+
 def decode_bucketed_range(
     min_value: float, max_value: float, n_levels: int, value: int
 ) -> float:
     return value / (n_levels - 1) * (max_value - min_value) + min_value
 
 
-type Encoder[T] = Callable[[T], int]
+T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+Ts = TypeVarTuple("Ts")
+
+Encoder = Callable[[T], int]
 
 
-def joint_encode[T1, T2](
+def joint_encode(
     encoder1: Encoder[T1],
     encoder2: Encoder[T2],
     n_states2: int,
@@ -116,22 +128,22 @@ def joint_encode[T1, T2](
     return encoded1 + encoded2 * n_states2
 
 
-def append_encoding[*Ts, T](
-    encoder1: Encoder[tuple[*Ts]],
+def append_encoding(
+    encoder1: Encoder[tuple[Unpack[Ts]]],
     encoder: Encoder[T],
     n_states: int,
-    value: tuple[*Ts, T],
+    value: tuple[Unpack[Ts], T],
 ) -> int:
     *xs, x = value
     reveal_type(value[:-1])
-    tup: tuple[*Ts] = tuple(xs)
+    tup: tuple[Unpack[Ts]] = tuple(xs)
     return joint_encode(encoder1, encoder, n_states, (tup, x))
 
 
-type Decoder[T] = Callable[[int], T]
+Decoder = Callable[[int], T]
 
 
-def joint_decode[T1, T2](
+def joint_decode(
     decoder1: Decoder[T1], decoder2: Decoder[T2], n_states2: int, value: int
 ) -> tuple[T1, T2]:
     encoded1 = value % n_states2

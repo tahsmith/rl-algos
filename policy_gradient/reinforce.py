@@ -2,9 +2,9 @@ import gym.spaces
 import numpy as np
 import torch
 
-device = torch.device('cpu')
+device = torch.device("cpu")
 
-env = gym.make('CartPole-v1')
+env = gym.make("CartPole-v1")
 
 assert isinstance(env.action_space, gym.spaces.Discrete)
 action_size = env.action_space.n
@@ -45,9 +45,7 @@ def learn(episodes):
     for episode in episodes:
         states, actions, rewards, next_states, dones = zip(*episode)
         states = torch.tensor(states, device=device, dtype=torch.float)
-        rewards = [reward * (discount ** i)
-                   for i, reward
-                   in enumerate(rewards)]
+        rewards = [reward * (discount**i) for i, reward in enumerate(rewards)]
         rewards = torch.tensor(rewards, device=device, dtype=torch.float)
         actions = torch.tensor(actions, device=device, dtype=torch.long)
 
@@ -59,8 +57,7 @@ def learn(episodes):
     final_returns = np.array(list(return_[-1] for return_ in returns))
     mean = final_returns.mean()
     std = final_returns.std() + 1e-3
-    loss = -sum((x * (y - mean) / std).sum() for x, y in zip(log_pi_list,
-                                                             returns))
+    loss = -sum((x * (y - mean) / std).sum() for x, y in zip(log_pi_list, returns))
 
     loss.backward()
     opt.step()
@@ -72,7 +69,7 @@ def episode(env: gym.Env):
     state = env.reset()
     done = False
     experiences = []
-    reward_total = 0.
+    reward_total = 0.0
     while not done:
         action = policy(state)
         next_state, reward, done, info = env.step(action)
@@ -84,17 +81,20 @@ def episode(env: gym.Env):
 
 
 def train():
-    running_rewards = [float('-inf') for _ in range(100)]
+    running_rewards = [float("-inf") for _ in range(100)]
     episodes = []
     i = 0
     while True:
         reward, experiences = episode(env)
         episodes.append(experiences)
         running_rewards = running_rewards[1:] + [reward]
-        print(f'\r{i + 1:06d} {reward:6.1f}', end='')
+        print(f"\r{i + 1:06d} {reward:6.1f}", end="")
         if ((i + 1) % 100) == 0:
-            print('\r{i:06d} {reward:6.1f}'.format(i=i + 1, reward=sum(
-                running_rewards) / 100))
+            print(
+                "\r{i:06d} {reward:6.1f}".format(
+                    i=i + 1, reward=sum(running_rewards) / 100
+                )
+            )
 
         if ((i + 1) % 10) == 0:
             learn(episodes)

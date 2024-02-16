@@ -1,44 +1,48 @@
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Generic, Optional, TypeVar
 from random import Random
 
 
+State = TypeVar("State")
+Action = TypeVar("Action")
+
+
 @dataclass
-class Step[State]:
+class Step(Generic[State]):
     reward: float
     next_state: Optional[State]
 
 
 @dataclass
-class Experience[State, Action]:
+class Experience(Generic[State, Action]):
     state: State
     action: Action
     reward: float
     next_state: Optional[State]
 
 
-type StepFn[TState, TAction] = Callable[[Random, TState, TAction], Step[TState]]
+StepFn = Callable[[Random, State, Action], Step[State]]
 
-type Policy[TState, TAction] = Callable[[Random, TState], TAction]
+Policy = Callable[[Random, State], Action]
 
-type History[Action, State] = list[Experience[State, Action]]
+History = list[Experience[State, Action]]
 
 
 @dataclass
-class Environment[State, Action]:
+class Environment(Generic[State, Action]):
     initial_state: Callable[[Random], State]
     step_fn: StepFn[State, Action]
 
 
-def episode_fn[State, Action](
+def episode_fn(
     random: Random,
     environment: Environment[State, Action],
     policy: Policy[State, Action],
     max_steps: Optional[int] = None,
-) -> History[Action, State]:
+) -> History[State, Action]:
     state = environment.initial_state(random)
     step_fn = environment.step_fn
-    history: History[Action, State] = []
+    history: History[State, Action] = []
     i = 0
     while state is not None:
         if max_steps and i > max_steps:

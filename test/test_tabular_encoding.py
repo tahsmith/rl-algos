@@ -39,10 +39,18 @@ def test_joint_encoding():
     assert decoded == (9, 9)
 
 
-normal_floats = st.floats(allow_nan=False, allow_infinity=False, allow_subnormal=False, min_value=-1000, max_value=1000)
+normal_floats = st.floats(
+    allow_nan=False,
+    allow_infinity=False,
+    allow_subnormal=False,
+    min_value=-1000,
+    max_value=1000,
+)
 
 
-@given(normal_floats, normal_floats, st.integers(min_value=2, max_value=10), normal_floats)
+@given(
+    normal_floats, normal_floats, st.integers(min_value=2, max_value=10), normal_floats
+)
 def test_output(min_value: float, max_value: float, n_levels: int, value: float):
     assume(max_value - min_value > 0.0)
     if min_value > max_value:

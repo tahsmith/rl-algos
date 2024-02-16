@@ -36,8 +36,7 @@ def epsilon_greedy_policy_probs(Q, eps, state):
 def epsilon_greedy(eps):
     def policy(Q, i, state):
         return np.random.choice(
-            len(Q[state]),
-            p=epsilon_greedy_policy_probs(Q, eps(i), state)
+            len(Q[state]), p=epsilon_greedy_policy_probs(Q, eps(i), state)
         )
 
     return policy
@@ -51,15 +50,12 @@ def softmax(x):
 
 def softmax_policy(t):
     def policy(Q, i, state):
-        return np.random.choice(
-            len(Q[state]),
-            p=softmax(Q[state] / t(i))
-        )
+        return np.random.choice(len(Q[state]), p=softmax(Q[state] / t(i)))
 
     return policy
 
 
 def moving_avg(window, y):
     avg_x = np.arange(y.shape[0] - window + 1) + window - 1
-    avg = np.convolve(y, np.ones(window) / window, mode='valid')
+    avg = np.convolve(y, np.ones(window) / window, mode="valid")
     return avg_x, avg
