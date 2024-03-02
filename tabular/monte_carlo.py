@@ -68,7 +68,7 @@ def monte_carlo_2(
 
         if (i + 1) % 1000 == 0:
             logger.info(
-                f"trial {i+1} of {trials}: eps={eps:.5} alpha={alpha:.5} reward={sum(exp.reward for exp in history):.5}"
+                f"trial {i+1} of {trials}: eps={eps:.5} alpha={alpha:.5} reward={float(sum(exp.reward for exp in history)):.5}"
             )
 
     return EstimationResult(

@@ -47,13 +47,13 @@ encoding = TabularEncoding(3, 2, encodeState, decodeAction)
 
 
 def test_monte_carlo_corridor():
-    q = monte_carlo_2(corridor_environment, Random(), 100, encoding)
+    q = monte_carlo_2(corridor_environment, Random(), encoding, 100, 0.001, 0.001)
     print(q)
 
 
-type GridCellType = Literal["g", "h", "."]
+GridCellType: TypeAlias = Literal["g", "h", "."]
 GridAction: TypeAlias = Literal["n", "s", "e", "w"]
-type GridState = tuple[int, int]
+GridState: TypeAlias = tuple[int, int]
 
 
 @dataclass
@@ -116,7 +116,7 @@ def test_grid_world(data: DataStrategy):
         lambda action: get_args(GridAction)[action],
     )
 
-    result = monte_carlo_2(environmnet, Random(), 1000, encoding)
+    result = monte_carlo_2(environmnet, Random(), encoding, 1000, 0.001, 0.001)
 
     q = data.draw(
         st.lists(

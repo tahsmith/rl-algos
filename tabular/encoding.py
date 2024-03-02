@@ -1,4 +1,3 @@
-from typing_extensions import TypeVarTuple
 from .types import (
     EncodedAction,
     EncodedState,
@@ -12,8 +11,7 @@ from random import Random
 from environments.types import StepFn, Environment, Step
 from dataclasses import dataclass
 import numpy as np
-from typing import Callable, TypeVar, Generic
-from typing_extensions import Unpack
+from typing import Callable, TypeVar, Generic, TypeVarTuple, Unpack
 
 
 def epsilon_greedy_policy_probs(Q: Array, eps: float, state: int):
