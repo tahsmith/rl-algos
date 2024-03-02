@@ -1,6 +1,6 @@
 from hypothesis import assume, strategies as st, given
 
-from tabular.encoding import (
+from rl.tabular.encoding import (
     encode_bucketed_range,
     decode_bucketed_range,
     joint_encode,

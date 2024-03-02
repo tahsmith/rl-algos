@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "rl"
+version = "0.1.0"
+description = "Reinforcement Learnging Algorithms"
+authors = ["Tim Smith <2762951+tahsmith@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^1.26.4"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.2"
+hypothesis = "^6.98.15"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -8,7 +8,7 @@ from .types import (
 )
 from random import Random
 
-from environments.types import StepFn, Environment, Step
+from ..environments.types import StepFn, Environment, Step
 from dataclasses import dataclass
 import numpy as np
 from typing import Callable, TypeVar, Generic, TypeVarTuple, Unpack

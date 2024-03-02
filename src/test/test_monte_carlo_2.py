@@ -3,9 +3,9 @@ from random import Random
 from typing import Literal, TypeAlias, get_args
 
 from hypothesis.strategies._internal.core import DataStrategy
-from environments.types import Step
-from environments.grid_world import make_grid_world, GridWorld, GridState, GridAction
-from tabular.monte_carlo import (
+from rl.environments.types import Step
+from rl.environments.grid_world import make_grid_world, GridWorld, GridState, GridAction
+from rl.tabular.monte_carlo import (
     Environment,
     TabularEncoding,
     episode_fn,

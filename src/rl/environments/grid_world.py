@@ -2,8 +2,8 @@ from functools import partial
 from random import Random
 from typing import Literal, TypeAlias
 
-from environments.types import Step
-from tabular.monte_carlo import (
+from rl.environments.types import Step
+from rl.tabular.monte_carlo import (
     Environment,
 )
 from dataclasses import dataclass
