@@ -4,13 +4,13 @@ from typing import Literal, TypeAlias, get_args
 
 from hypothesis.strategies._internal.core import DataStrategy
 from environments.types import Step
+from environments.grid_world import make_grid_world, GridWorld, GridState, GridAction
 from tabular.monte_carlo import (
     Environment,
     TabularEncoding,
     episode_fn,
     monte_carlo_2,
 )
-from dataclasses import dataclass
 from hypothesis import given, note, strategies as st
 import numpy as np
 
@@ -50,58 +50,6 @@ def test_monte_carlo_corridor():
     q = monte_carlo_2(corridor_environment, Random(), encoding, 100, 0.001, 0.001)
     print(q)
 
-
-GridCellType: TypeAlias = Literal["g", "h", "."]
-GridAction: TypeAlias = Literal["n", "s", "e", "w"]
-GridState: TypeAlias = tuple[int, int]
-
-
-@dataclass
-class GridWorld:
-    columns: int
-    rows: int
-    grid: list[list[GridCellType]]
-
-
-def grid_world_step_fn(
-    world: GridWorld, random: Random, state: GridState, action: GridAction
-) -> Step[GridState]:
-    if action == "n":
-        state = (state[0] - 1, state[1])
-    elif action == "s":
-        state = (state[0] + 1, state[1])
-    elif action == "e":
-        state = (state[0], state[1] + 1)
-    elif action == "w":
-        state = (state[0], state[1] - 1)
-    else:
-        raise ValueError()
-
-    if (
-        (state[0] > world.rows - 1)
-        or (state[0] < 0)
-        or (state[1] > world.columns - 1)
-        or (state[1] < 0)
-    ):
-        return Step(reward=0, next_state=None)
-
-    cell_type = world.grid[state[0]][state[1]]
-
-    if cell_type == ".":
-        return Step(reward=0, next_state=state)
-    elif cell_type == "h":
-        return Step(reward=0, next_state=None)
-    elif cell_type == "g":
-        return Step(reward=1, next_state=None)
-    else:
-        raise ValueError()
-
-
-def make_grid_world(world: GridWorld) -> Environment[GridState, GridAction]:
-    return Environment(
-        lambda _: (0, 0),
-        partial(grid_world_step_fn, world),
-    )
 
 
 @given(st.data())
