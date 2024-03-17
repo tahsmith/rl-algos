@@ -1,9 +1,9 @@
 from dataclasses import replace
-from environments.hedge import hedge_environment, State, Action
-from tabular import monte_carlo
-import tabular.encoding as encoding
+from rl.environments.hedge import hedge_environment, State, Action
+from rl.tabular import monte_carlo
+import rl.tabular.encoding as encoding
 import random
-from environments.types import episode_fn
+from rl.environments.types import episode_fn
 from pprint import pprint
 import logging
 import numpy as np

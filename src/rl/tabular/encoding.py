@@ -133,7 +133,7 @@ def append_encoding(
     value: tuple[Unpack[Ts], T],
 ) -> int:
     *xs, x = value
-    reveal_type(value[:-1])
+    value[:-1]
     tup: tuple[Unpack[Ts]] = tuple(xs)
     return joint_encode(encoder1, encoder, n_states, (tup, x))
 

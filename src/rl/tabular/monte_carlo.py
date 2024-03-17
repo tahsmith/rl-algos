@@ -14,7 +14,7 @@ from functools import partial
 from logging import getLogger
 from numpy.typing import ArrayLike
 
-from environments.types import History, Environment, Policy, episode_fn
+from ..environments.types import History, Environment, Policy, episode_fn
 from .types import (
     EncodedState,
     EncodedAction,
@@ -68,7 +68,9 @@ def monte_carlo_2(
 
         if (i + 1) % 1000 == 0:
             logger.info(
-                f"trial {i+1} of {trials}: eps={eps:.5} alpha={alpha:.5} reward={float(sum(exp.reward for exp in history)):.5}"
+                f"trial {i+1} of {trials}: eps={eps:.5}"
+                 alpha={alpha:.5}"
+                 reward={float(sum(exp.reward for exp in history)):.5}"
             )
 
     return EstimationResult(
